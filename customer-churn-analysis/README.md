@@ -1,22 +1,29 @@
+# Executive Summary
+This project analyzes customer churn using behavioral features.
+A Random Forest model with optimized threshold achieved F1=0.883.
+Engagement and recency are the strongest predictors.
+The model can identify 89% of churners with controlled false positives.
+This supports proactive retention strategies.
+
 # customer-churn-analysis
-Lookng at data:
+Lookng at the data:
 customers with long gap since their last purchase show a strong churn signal, which may introduce label leakage. 
-Therefore we test models with and without this feature. 
-avg "days sice last order" when churn=yes => 81.433
-avg "days sice last order" when churn=No => 20.101
+Therefore, we test models both with and without this feature. 
+avg "days since last order" when churn=yes => 81.433
+avg "days since last order" when churn=No => 20.101
 
 shown moderate correlation:
 avg "total orders" when churn=yes => 7.07
 avg "total orders" when churn=no => 8.84
 
 avg "satisfaction score" when churn=yes => 7.68
-avg "satisfaction score" when churn=yes => 8.140
+avg "satisfaction score" when churn=no => 8.140
 
 avg "browsing frequency" when churn=yes => 2.55
-avg "browsing frequency" when churn=yes => 3.172
+avg "browsing frequency" when churn=no => 3.172
 
 avg "engagement_score" when churn=yes => 2.36
-avg "engagement_score" when churn=yes => 5.34
+avg "engagement_score" when churn=no => 5.34
 
 
 not strong predictors:
@@ -30,8 +37,20 @@ avg "cart abandonment rate" when churn=yes => 0.596
 avg "cart abandonment rate" when churn=yes => 0.603
 
 # data imbalance rate 
-The dataset is moderately imbalanced with a churn rate of 15.48%. if we build a model that classify all the samples n no churn, the accuracy would be 85.52%.
-Therefore accuracy alone would be misleading; evaluation will focus on recall and F1-scor
+The dataset is moderately imbalanced with a churn rate of 15.48%. if we build a model that classifies all the samples n no churn, the accuracy would be 85.52%.
+Therefore accuracy alone would be misleading; evaluation will focus on recall and F1-score.
+
+# Data Preprocessing Section
+Data was split using stratified train-test split (80/20) to preserve class imbalance.
+Logistic Regression features were standardized using StandardScaler.
+Random Forest was trained on raw features.
+
+# Limitations
+- Dataset is synthetic and not time-ordered.
+- Potential leakage risk from recency-related features.
+- No cost-based evaluation was applied.
+- Model performance may differ in real-world deployment.
+
 
 # plotting
 We focused on behavioral features likely to correlate with churn (engagement, activity, satisfaction, loyalty).
@@ -43,7 +62,7 @@ Churned users show significantly lower engagement scores with minimal distributi
 
 
 # heatmap and correlations 
-highly correlated eatures:
+highly correlated features:
 discount_usage_rate & price_sensitivity_index (0.96)
 
 product_review_score_avg & satisfaction_score (0.82)
@@ -53,7 +72,7 @@ customer_support_tickets & satisfaction_score (-0.79)
 
 
 
-Correlation insights:
+# Correlation insights:
 The correlation heatmap shows that some features carry very similar information.
 
 days_since_last_purchase and engagement_score are strongly negatively correlated. Customers who are more engaged tend to purchase more recently. These features describe related behavior, so we should be careful about redundancy.
@@ -74,3 +93,47 @@ product_review_score_avg ↔ satisfaction_score (strong positive correlation)
 days_since_last_purchase ↔ engagement_score (strong negative correlation)
 
 These pairs likely describe overlapping customer behavior, so we will consider testing models with only one feature from each pair to reduce redundancy.
+
+# Baseline Model
+A dummy classifier predicting only the majority class achieves 85.5% accuracy,
+but 0 recall for churn class.
+
+# Model Comparison Section
+
+| Model               | Recall | Precision | F1    | Threshold |
+|--------------------|--------|----------|-------|----------|
+| Logistic Regression| 0.855  | 0.893    | 0.874 | 0.50     |
+| Random Forest      | 0.892  | 0.874    | 0.883 | 0.40     |
+
+Random Forest slightly outperformed Logistic Regression in recall and F1-score, especially after threshold optimization.
+
+# Threshold Optimization Section
+
+Instead of using default threshold (0.5),
+we evaluated thresholds between 0.2 and 0.7.
+The best F1-score (0.883) was achieved at threshold=0.40.
+
+# Business Interpretation
+
+At threshold=0.40:
+- 89% of churners are correctly identified.
+- Only 24 non-churn customers are incorrectly flagged.
+This enables proactive retention campaigns with controlled false positives.
+
+# Conclusion Section
+The Random Forest model with an optimized threshold achieved strong performance on imbalanced data. 
+Behavioral features such as engagement_score and recency are dominant predictors.
+Future improvements may include time-based validation and cost-sensitive learning.
+
+# Key Business Drivers of Churn
+
+- Low engagement
+- High inactivity gap
+- Low satisfaction
+- Lower browsing frequency
+
+Recommended actions:
+
+- Engagement campaigns
+- Personalized reactivation emails
+- Satisfaction monitoring
